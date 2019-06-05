@@ -1,0 +1,55 @@
+port: 8080
+
+# remove static-home if no static files to show
+static-home:
+  root: ./static
+  alias: /static
+
+# remove any CORS header if needed
+cors:
+  allow-origin: "*"
+  allow-headers: "Content-Type, Authorization, Accept, X-Requested-With"
+  allow-methods: "GET, PUT, POST, DELETE, OPTIONS"
+  expose-headers: "X-Total-Count, X-Limit-Count, Link"
+  allow-credentials: "*"
+
+default-content-type: "application/json"
+
+actions:
+  -
+    uri: /
+    method: "GET, POST"
+    response:
+      status: 200
+      headers:
+        content-type: "text/plain"
+      cookies:
+        cookie-name: cookie-value
+      # there are 4 kinds of body: "body", "file-body", "tmpl-body", "redirect-body"
+      tmpl-body: |-
+        Welcome to use
+        http-mock
+        {{ .r.Method }}
+  -
+    uri: /ping
+    method: "GET, POST"
+    response:
+      body: |-
+        {
+           "code": 200,
+           "msg": "OK"
+        }
+  -
+    uri: /api/users/:id
+    response:
+      tmpl-body: '{"code":200,"msg":"OK", "id": "{{pathVar .r "id"}}"}'
+  -
+    uri: /showfile
+    response:
+      content-type: "text/plain"
+      file-body: a-file.txt
+  -
+    uri: /redirect
+    response:
+      redirect-body: /
+
