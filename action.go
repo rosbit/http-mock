@@ -40,14 +40,13 @@ func (e *Endpoint) GetUri() string {
 func (e *Endpoint) GetHandler() http.HandlerFunc {
 	a := e.action
 	return func(w http.ResponseWriter, r *http.Request) {
-		h := w.Header()
-
 		// redirect
 		if a.RedirectBody != "" {
 			http.Redirect(w, r, a.RedirectBody, http.StatusMovedPermanently)
 			return
 		}
 
+		h := w.Header()
 		h.Set("Content-Type", ServiceConf.DefaultContentType)
 		setHeaders(a, h)
 		setCookies(a, h)
