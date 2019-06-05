@@ -72,7 +72,7 @@
       response:
         redirect-body: /
   
-  ```
+ ```
 
 ## Usage
  1. with go1.11.x or above
@@ -84,15 +84,15 @@
     $ cd http-mock
     $ go build
     ```
- 
- 3. if everything is ok, there will be a executable `http-mock` under the directory
 
- 4. for binary output under Linux, click [releases](https://github.com/rosbit/http-mock/releases) to download it.
+ 3. if everything is ok, there will be an executable `http-mock` under the directory
+
+ 4. for binary output under Linux/macos, click [releases](https://github.com/rosbit/http-mock/releases) to download it.
 
  5. run `http-mock` with an env variable `CONF_FILE` pointed to the configuration file
 
      ```bash
-     $ CONF_FILE=./config.sample.json ./http-mock
+     $ CONF_FILE=./config.sample.yaml ./http-mock
      I am listening at :8080...
      ```
 
@@ -100,10 +100,39 @@
 
      ```bash
      $ curl http://localhost:8080/
+     Welcome to use
+     http-mock
+     GET
+     
      $ curl http://localhost:8080/showfile
+     this is the content of a-file
+     
      $ curl http://localhost:8080/api/users/1
+     {"code":200,"msg":"OK", "id": "1"}
+     
      $ curl -X POST http://localhost:8080/ping
+     {
+        "code": 200,
+        "msg": "OK"
+     }
+     
      $ curl http://localhost:8080/static/a-file.txt  # static file
+     this is the content of a-file
+     
+     $ curl -D - http://localhost:8080/redirect
+     HTTP/1.1 301 Moved Permanently
+     Access-Control-Allow-Credentials: *
+     Access-Control-Allow-Headers: Content-Type, Authorization, Accept, X-Requested-With
+     Access-Control-Allow-Methods: GET, PUT, POST, DELETE, OPTIONS
+     Access-Control-Allow-Origin: *
+     Access-Control-Expose-Headers: X-Total-Count, X-Limit-Count, Link
+     Content-Type: text/html; charset=utf-8
+     Location: /
+     Date: Wed, 05 Jun 2019 06:43:58 GMT
+     Content-Length: 36
+     
+     <a href="/">Moved Permanently</a>.
+     
      ```
 
 ## Contribution
