@@ -19,17 +19,13 @@ var (
 
 func main() {
 	if len(os.Args) > 1 && os.Args[1] == "-v" {
-		ShowInfo("name",       os.Args[0])
-		ShowInfo("build time", buildTime)
-		ShowInfo("os name",    osInfo)
-		ShowInfo("compiler",   goInfo)
+		showVersion()
 		return
 	}
 
 	if err := CheckGlobalConf(); err != nil {
 		fmt.Printf("%v\n", err)
 		os.Exit(3)
-		return
 	}
 	DumpConf()
 
@@ -40,8 +36,15 @@ func main() {
 	os.Exit(0)
 }
 
-func ShowInfo(prompt, info string) {
+func showInfo(prompt, info string) {
 	if info != "" {
 		fmt.Printf("%10s: %s\n", prompt, info)
 	}
+}
+
+func showVersion() {
+	showInfo("name",       os.Args[0])
+	showInfo("build time", buildTime)
+	showInfo("os name",    osInfo)
+	showInfo("compiler",   goInfo)
 }

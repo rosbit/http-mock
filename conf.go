@@ -41,7 +41,7 @@ type ServiceConfT struct {
 	Port               int    `yaml:"port"`
 	StaticConf                `yaml:"static-home"`
 	CorsConf                  `yaml:"cors"`
-    DefaultContentType string `yaml:"default-content-type"`
+	DefaultContentType string `yaml:"default-content-type"`
 	Actions          []Action
 }
 

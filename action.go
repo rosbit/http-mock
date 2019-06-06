@@ -7,13 +7,14 @@ import (
 	"github.com/gernest/alien"
 	"path"
 	"mime"
+	"io"
 )
 
 var (
 	_DEFAULT_METHODS = []string{http.MethodGet}
 	_RE = regexp.MustCompile("[\\s,]+")
 
-	_funcs = template.FuncMap{
+	_FUNCS = template.FuncMap{
 		"pathVar": func(r *http.Request, n string)string {
 			p := alien.GetParams(r)
 			return p.Get(n)
@@ -21,24 +22,20 @@ var (
 	}
 )
 
-type Endpoint struct {
-	action *Action
-}
+type Endpoint Action
 
-func (e *Endpoint) GetMethods() []string {
-	a := e.action
+func (a *Endpoint) GetMethods() []string {
 	if a.Method == "" {
 		return _DEFAULT_METHODS
 	}
 	return _RE.Split(a.Method, -1)
 }
 
-func (e *Endpoint) GetUri() string {
-	return e.action.Uri
+func (a *Endpoint) GetUri() string {
+	return a.Uri
 }
 
-func (e *Endpoint) GetHandler() http.HandlerFunc {
-	a := e.action
+func (a *Endpoint) GetHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// redirect
 		if a.RedirectBody != "" {
@@ -47,13 +44,15 @@ func (e *Endpoint) GetHandler() http.HandlerFunc {
 		}
 
 		h := w.Header()
-		h.Set("Content-Type", ServiceConf.DefaultContentType)
-		setHeaders(a, h)
-		setCookies(a, h)
+		if ServiceConf.DefaultContentType != "" {
+			h.Set("Content-Type", ServiceConf.DefaultContentType)
+		}
+		a.setHeaders(h)
+		a.setCookies(h)
 
 		// file body
 		if a.FileBody != "" {
-			showFile(w, r, a.FileBody, a.Status)
+			a.showFile(w, r)
 			return
 		}
 
@@ -63,13 +62,13 @@ func (e *Endpoint) GetHandler() http.HandlerFunc {
 
 		// template
 		if a.TmplBody != "" {
-			execTemplate(w, r, a.TmplBody)
+			a.execTemplate(w, r)
 			return
 		}
 
 		// average body
 		if a.Body != "" {
-			w.Write([]byte(a.Body))
+			io.WriteString(w, a.Body)
 		}
 	}
 }
@@ -78,12 +77,12 @@ func CreateEndpoints() []*Endpoint {
 	actions := ServiceConf.Actions
 	es := make([]*Endpoint, len(ServiceConf.Actions))
 	for i := range actions {
-		es[i] = &Endpoint{&actions[i]}
+		es[i] = (*Endpoint)(&actions[i])
 	}
 	return es
 }
 
-func setHeaders(a *Action, h http.Header) {
+func (a *Endpoint) setHeaders(h http.Header) {
 	if a.Headers == nil || len(a.Headers) == 0 {
 		return
 	}
@@ -92,7 +91,7 @@ func setHeaders(a *Action, h http.Header) {
 	}
 }
 
-func setCookies(a *Action, h http.Header) {
+func (a *Endpoint) setCookies(h http.Header) {
 	if a.Cookies == nil || len(a.Cookies) == 0 {
 		return
 	}
@@ -102,19 +101,21 @@ func setCookies(a *Action, h http.Header) {
 	}
 }
 
-func showFile(w http.ResponseWriter, r *http.Request, file string, status int) {
-	ext := path.Ext(file)
+func (a *Endpoint) showFile(w http.ResponseWriter, r *http.Request) {
+	ext := path.Ext(a.FileBody)
 	mimeType := mime.TypeByExtension(ext)
-	w.Header().Set("Content-Type", mimeType)
-	fn := path.Join(ServiceConf.Root, file)
-	if status != 0 {
-		w.WriteHeader(status)
+	if mimeType != "" {
+		w.Header().Set("Content-Type", mimeType)
+	}
+	fn := path.Join(ServiceConf.Root, a.FileBody)
+	if a.Status != 0 {
+		w.WriteHeader(a.Status)
 	}
 	http.ServeFile(w, r, fn)
 }
 
-func execTemplate(w http.ResponseWriter, r *http.Request, tmpl string) {
-	t, err := template.New("webpage").Funcs(_funcs).Parse(tmpl)
+func (a *Endpoint) execTemplate(w http.ResponseWriter, r *http.Request) {
+	t, err := template.New("webpage").Funcs(_FUNCS).Parse(a.TmplBody)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

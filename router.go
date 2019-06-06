@@ -15,6 +15,7 @@ func StartService() error {
 	api.Use(negroni.HandlerFunc(SetCorsHeader))
 
 	router := alien.New()
+	api.UseHandler(router)
 
 	if ServiceConf.Root != "" && ServiceConf.Alias != "" {
 		aliasPath := ServiceConf.Alias
@@ -36,9 +37,7 @@ func StartService() error {
 		}
 	}
 
-	api.UseHandler(router)
 	listenParam := fmt.Sprintf(":%d", ServiceConf.Port)
 	fmt.Printf("I am listening at %s...\n", listenParam)
-	fmt.Printf("%v\n", http.ListenAndServe(listenParam, api))
-	return nil
+	return http.ListenAndServe(listenParam, api)
 }
